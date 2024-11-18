@@ -2,7 +2,7 @@ const  dotenv =  require('dotenv');
 const express = require("express");
 const { default: mongoose } = require("mongoose");
 const eventRoute = require("./router/Event")
-const paymentRoute = require("./router/Payment")
+// const paymentRoute = require("./router/Payment")
 const userRoute = require("./router/User")
 const cors = require("cors")
 const Razorpay = require("razorpay");
@@ -67,7 +67,7 @@ app.get("/",(req,res)=>{
 
 
 app.use("/api/events",eventRoute)
-app.use("/api/payment",paymentRoute)
+// app.use("/api/payment",paymentRoute)
 app.use("/api/user",userRoute)
 
 
