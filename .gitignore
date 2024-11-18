@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /.pnp
+/serviceAccount.json
 .pnp.*
 .yarn/*
 !.yarn/patches
