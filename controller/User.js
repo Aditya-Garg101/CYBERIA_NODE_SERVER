@@ -68,7 +68,7 @@ const registerTeamUser = async (req, res) => {
       },
     });
 
-    const pdfDirectory = path.join(__dirname, "../tickets");
+    const pdfDirectory = path.join(__dirname, "../tmp/tickets");
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true }); // Create the directory if it doesn't exist
     }
@@ -180,7 +180,7 @@ const registerSoloUser = async (req, res) => {
     if(req.body.email){
       res.send("Recipients Required").status(304)
     }
-    const pdfDirectory = path.join(__dirname, "../tickets");
+    const pdfDirectory = path.join(__dirname, "../tmp/tickets");
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true }); // Create the directory if it doesn't exist
     }
