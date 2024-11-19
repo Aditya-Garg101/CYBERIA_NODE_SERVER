@@ -12,19 +12,7 @@ const { exec } = require("child_process");
 dotenv.config();
 const mime = require('mime');
 const admin = require("firebase-admin")
-const serviceAccount =  {
-  "type": "service_account",
-  "project_id": "e-commerce-backend-bfa60",
-  "private_key_id": "869c5c3d0a8cf766e1212cc13fd5e14b3934c0e2",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDNCSzeCaFmt1R6\ntcNWtysp8TQCkcICOxRVXbNpI4DL/gm6vUunbVQNzBn5CWbtuyFwKzjShYP5b/HL\nocFXw68HEIFqEm+gYUZyVVXJAQFAKaRfTzFTVxwp/x+L93g3e+iJ1tlTpiguc3pH\n/IbeaalMAe+HMXApto4QIetK+w+MN6a0MnoAB1l1Jvt88Bv88mc4cLzbKTMpDl9S\ncbiDv8Uo6loILBqlnTAHu5lPskiO6VE4zZpp1rX10tsWpRfVgCJfYcPxVLDuUj2A\n2ixowiCAiGExRt+19sL5q4lICFQHxmf7cyzm8YT6JtjeAmXChIsg52/YHt4mYHTq\nr7enO25JAgMBAAECggEALDzajV2OkVbkx0UITGFg0r/T9On17f1JOdHpr7mVRG4f\nM0c8V3djN0beI7k/l/NUF5t7uxBLlTnt9X2E9aam0ONiyLwJkZTrWifHRoMM/gb+\nDAJOJikZToZZDB3stivp1DOi2EV1TfBkZbu6bapmeJvCTm0AQj+9DwYCej8I77t/\nPH81oQc3nvFRKAZEfSbEJL+zyU4RaWv9xEsOvngvNkFE+i/Dkcpdc8llSgO54WGp\nDsRkgtH4SmRNM7KsXvLJpXaiPh5HcytphAh3sSI1Jh3be6Vx+LFKH5R1mjWK2/YG\n3Av9/jCwM2Bm2wBDCRUG6RuZA1+b0VM1LTDN6JZS8QKBgQDqfX4S4eRr2vpZbSwx\nLwFNvi/m/i3uacgt+BjWntXVbEibDXpj2Q//fwJiyOyzDEuVHygTpkMsTRDOekds\nlMynjNl8LeKMr/6Y1WueEROcYj+IaeaBeXZ3g9s8a6j03R5i2aDLrPBIDj1LNTOW\n023a8wwgPawZM9fYUHdccJAK8wKBgQDf2AJb9gBM3blXOpM+GLD8TTYuH5K4Ho1A\nDHtxi5GOJQ0DEAtWKhTX7VV5FwLsrqevM7DowrwbuJtikl/XG+158uX+0wGloSBb\nwQyUG2UdWa+UdfYHOQnW2bRlzAV7F8+6EZ7s9IG84leW3g0yRJ0reC9sTLtY9EoR\nsjou3j340wKBgQDpmWrnVLJB4DxWqjPEK5eY40bFT6JiSG9rnCTiagmMO/t4u8yZ\ne7w8Q0MVNiTXmgAR5p/+Mzvn/j4n9BkDSpk2sVJYKz3t+cYgazxyk4B94kJ4m0dO\n5LnoBit53abLiRykTTmqrfYRUl4tdiqWrrpZzJbf55By6vq0PDUsmdZlkQKBgA6T\n1rN+dc6LsgJIQkaM/RmxPZILZFaxRqmhJnjiifwj1ZEZfmOCIhFd128nXH1lcm4q\ng57k77MudpAY0D0GCJUkiG3r9/N9ZsoS7GrIzfD3YkPc2sTlpgpj6yel/cVia5jG\nhP8RfVF7vBCLLXjUlxe5n/0BkkHcxuYYIUnkF00ZAoGAckX5IWTA38CWHFnJ9Nol\ntbqJ9wu7EE2GV1dln4FqWwPcbU+GGpY3L70OOdSYvNf+UyKrUYiTAGVyDhxd56rD\nfupWieyd48CdFBPTx5EBOk4tWQRAbDW1hPQRD7uXXbGE54SnXcstfASOai2uXqaG\nihE7w3zzadgc6chX2ypTXrU=\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-j4zn4@e-commerce-backend-bfa60.iam.gserviceaccount.com",
-  "client_id": "112347859658337575349",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-j4zn4%40e-commerce-backend-bfa60.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-}
+const serviceAccount = JSON.stringify(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
 
 
 
