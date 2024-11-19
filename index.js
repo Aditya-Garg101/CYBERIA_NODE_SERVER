@@ -26,7 +26,8 @@ app.use(
         "https://www.msudcacyberia.in",
         "http://localhost:3000",
         "https://cyberia2k24.vercel.app",        
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        "https://msudcacyberia.in"
         
       ],
       methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
@@ -45,6 +46,7 @@ app.use(
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://www.msudcacyberia.in",
+    "https://msudcacyberia.in",
     
   ];
   
