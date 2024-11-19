@@ -12,7 +12,7 @@ const { exec } = require("child_process");
 dotenv.config();
 const mime = require('mime');
 const admin = require("firebase-admin")
-const serviceAccount =  JSON.stringify(porcess.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+const serviceAccount =  JSON.stringify(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
 
 
 
