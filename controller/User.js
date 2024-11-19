@@ -72,8 +72,11 @@ const registerTeamUser = async (req, res) => {
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true }); // Create the directory if it doesn't exist
     }
+    
+    if(req.body.email){
+      res.send("Recipients Required").status(304)
+    }
     const filePath = path.join(pdfDirectory, `${req.body.fullName}.pdf`);
-
     const doc = new PDFDocument();
     const writeStream = fs.createWriteStream(filePath);
     doc.pipe(writeStream);
@@ -173,6 +176,10 @@ const registerSoloUser = async (req, res) => {
         pass: process.env.password,
       },
     });
+
+    if(req.body.email){
+      res.send("Recipients Required").status(304)
+    }
     const pdfDirectory = path.join(__dirname, "../tickets");
     if (!fs.existsSync(pdfDirectory)) {
       fs.mkdirSync(pdfDirectory, { recursive: true }); // Create the directory if it doesn't exist
@@ -263,11 +270,6 @@ const registerSoloUser = async (req, res) => {
       .status(201)
       .json({ message: "QR Code generated and sent successfully!", SoloData });
     }
-
-    
-      
-     
-
    
   } catch (error) {
     console.error("Error generating QR code:", error);
