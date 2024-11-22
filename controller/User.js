@@ -15,6 +15,7 @@ const admin = require("firebase-admin")
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
 
 
+
 if(!admin.apps.length){
   admin.initializeApp({
     credential:
@@ -128,7 +129,10 @@ const registerTeamUser = async (req, res) => {
     // Generate the PDF content
     // Set up the email template structure
 doc.fontSize(20).text("Your Tickets for " + req.body.events , { align: "center" });
-
+doc.image(qrCodeData, {
+  fit: [150, 150],
+  align: 'center',  
+});
 doc.fontSize(16)
   .text(`Dear ${req.body.teamName},`, { align: 'left' })
   .moveDown()
@@ -153,10 +157,7 @@ doc.fontSize(16)
   .moveDown();
 
 // Add the QR code to the PDF
-doc.image(qrCodeData, {
-  fit: [150, 150],
-  align: 'center',
-});
+
 
 doc.end(); // End the PDF generation
 
@@ -266,6 +267,10 @@ const registerSoloUser = async (req, res) => {
 
     // Generate the PDF content
     doc.fontSize(20).text("Your Event Ticket", { align: "center" });   
+    doc.image(qrCodeData, {
+      fit: [150, 150],
+      align: 'center',
+    });
     doc.fontSize(16)
       .text(`Dear ${req.body.fullName},`, { align: 'left' })
       .moveDown()
@@ -278,6 +283,7 @@ const registerSoloUser = async (req, res) => {
       .text(`• Event Name: ${req.body.events}`)
       .text(`• Venue: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
       .moveDown()
+      
       .text('You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.')
       .moveDown()
       .text('We can’t wait to welcome you to the event!', { align: 'left' })
@@ -290,10 +296,7 @@ const registerSoloUser = async (req, res) => {
       .moveDown();
     
     // Add the QR code to the PDF
-    doc.image(qrCodeData, {
-      fit: [150, 150],
-      align: 'center',
-    });
+   
     
     doc.end(); // End the PDF generation
 
