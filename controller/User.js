@@ -126,22 +126,40 @@ const registerTeamUser = async (req, res) => {
     });
 
     // Generate the PDF content
-    doc.fontSize(20).text("Your Event Ticket", { align: "center" });
-    doc.fontSize(16).text(`Dear ${req.body.teamName},`, { align: 'left' })
-      .moveDown()
-      .text(`Event: ${req.body.events}`)
-      .text(`Date: 24 Dec`)
-      .text(`Location: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
-      .moveDown()
-      .text('Scan the QR code below for entry:', { align: 'left' });
+    // Set up the email template structure
+doc.fontSize(20).text("Your Tickets for " + req.body.events , { align: "center" });
 
-    // Add the QR code to the PDF
-    doc.image(qrCodeData, {
-      fit: [150, 150],
-      align: 'center',
-    });
+doc.fontSize(16)
+  .text(`Dear ${req.body.teamName},`, { align: 'left' })
+  .moveDown()
+  .text(`We're thrilled that you'll be joining us for ${req.body.events} on 24 Dec! Your tickets are attached to this email.`)
+  .moveDown()
+  .text('You can download the tickets from the link attached with this.')
+  .moveDown()
+  .text('Event Details:', { align: 'left' })
+  .moveDown()
+  .text(`• Event Name: ${req.body.events}`)
+  .text(`• Venue: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
+  .moveDown()
+  .text('You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.')
+  .moveDown()
+  .text('We can’t wait to welcome you to the event!', { align: 'left' })
+  .moveDown()
+  .text('Best regards,', { align: 'left' })
+  .moveDown()
+  .text(req.body.fullName)  // assuming 'organizerName' is part of the request body  
+  .text("Cyberia Team") // assuming 'organizerOrganization' is part of the request body
+  .text("9408802605") // assuming 'contactInfo' is part of the request body
+  .moveDown();
 
-    doc.end(); // End the PDF generation
+// Add the QR code to the PDF
+doc.image(qrCodeData, {
+  fit: [150, 150],
+  align: 'center',
+});
+
+doc.end(); // End the PDF generation
+
 
   } catch (error) {
     console.error("Error generating QR code or email:", error);
@@ -204,7 +222,7 @@ const registerSoloUser = async (req, res) => {
               <h2 style="text-align: center; color: #0073e6;">Your Event Ticket</h2>
               <p>Dear ${req.body.fullName},</p>
               <p>Thank you for registering for <strong>${req.body.events}</strong>!</p>
-              <p>Please find your ticket attached. <strong>Use the password below to open the PDF:</strong></p>
+              <p>Please find your ticket attached. </p>
               <div style="background-color: #f2f2f2; padding: 10px; border-radius: 5px; text-align: center; font-size: 18px;">
                 <a href="${fileLink}" target="_blank">Download Your Ticket</a>
               </div>          
@@ -247,21 +265,36 @@ const registerSoloUser = async (req, res) => {
     });
 
     // Generate the PDF content
-    doc.fontSize(20).text("Your Event Ticket", { align: "center" });
-    doc.fontSize(16).text(`Dear ${req.body.fullName},`, { align: 'left' })
+    doc.fontSize(20).text("Your Event Ticket", { align: "center" });   
+    doc.fontSize(16)
+      .text(`Dear ${req.body.fullName},`, { align: 'left' })
       .moveDown()
-      .text(`Event: ${req.body.events}`)
-      .text(`Date: 24 Dec`)
-      .text(`Location: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
+      .text(`We're thrilled that you'll be joining us for ${req.body.events} on 24 Dec! Your tickets are attached to this email.`)
       .moveDown()
-      .text('Scan the QR code below for entry:', { align: 'left' });
-
+      .text('You can download the tickets from the link attached with this.')
+      .moveDown()
+      .text('Event Details:', { align: 'left' })
+      .moveDown()
+      .text(`• Event Name: ${req.body.events}`)
+      .text(`• Venue: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
+      .moveDown()
+      .text('You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.')
+      .moveDown()
+      .text('We can’t wait to welcome you to the event!', { align: 'left' })
+      .moveDown()
+      .text('Best regards,', { align: 'left' })
+      .moveDown()
+      .text(req.body.fullName)  // assuming 'organizerName' is part of the request body  
+      .text("Cyberia Team") // assuming 'organizerOrganization' is part of the request body
+      .text("9408802605") // assuming 'contactInfo' is part of the request body
+      .moveDown();
+    
     // Add the QR code to the PDF
     doc.image(qrCodeData, {
       fit: [150, 150],
       align: 'center',
     });
-
+    
     doc.end(); // End the PDF generation
 
   } catch (error) {
