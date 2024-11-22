@@ -100,7 +100,7 @@ const registerTeamUser = async (req, res) => {
               </div>          
               <p>We look forward to seeing you at the event!</p>
               <p>Note: QR code will be disabled once scanned, so keep it secure!</p>
-              <p>Best Regards,<br>The ${req.body.events} Team</p>
+              <p>Best Regards,<br>The Cyberia Team</p>
             </div>
           `,
         };
@@ -127,39 +127,47 @@ const registerTeamUser = async (req, res) => {
     });
 
     // Generate the PDF content
-    // Set up the email template structure
-doc.fontSize(20).text("Your Tickets for " + req.body.events , { align: "center" });
-doc.image(qrCodeData, {
-  fit: [150, 150],
-  align: 'center',  
-});
-doc.fontSize(16)
-  .text(`Dear ${req.body.teamName},`, { align: 'left' })
-  .moveDown()
-  .text(`We're thrilled that you'll be joining us for ${req.body.events} on 24 Dec! Your tickets are attached to this email.`)
-  .moveDown()
-  .text('You can download the tickets from the link attached with this.')
-  .moveDown()
-  .text('Event Details:', { align: 'left' })
-  .moveDown()
-  .text(`• Event Name: ${req.body.events}`)
-  .text(`• Venue: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
-  .moveDown()
-  .text('You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.')
-  .moveDown()
-  .text('We can’t wait to welcome you to the event!', { align: 'left' })
-  .moveDown()
-  .text('Best regards,', { align: 'left' })
-  .moveDown()
-  .text(req.body.fullName)  // assuming 'organizerName' is part of the request body  
-  .text("Cyberia Team") // assuming 'organizerOrganization' is part of the request body
-  .text("9408802605") // assuming 'contactInfo' is part of the request body
-  .moveDown();
+    doc.fontSize(23).text("Your Event Ticket", { align: "center" });   
+   
+    const pageWidth = doc.page.width;  // Get the page width
+    const qrCodeSize = 150;            // Define the size of the QR code (150x150)
+    const qrCodeX = (pageWidth - qrCodeSize) / 2; // Calculate the x position to center the image
+    
+    // Add the QR code using absolute positioning
+    doc.image(qrCodeData, qrCodeX, doc.y, {
+      fit: [qrCodeSize, qrCodeSize],   // Fit the image within 150x150
+    });
 
-// Add the QR code to the PDF
+    doc.moveDown(7);
 
-
-doc.end(); // End the PDF generation
+    doc.fontSize(16)
+      .text(`Dear ${req.body.teamName},`, { align: 'left' })
+      .moveDown()
+      .text(`We're thrilled that you'll be joining us for ${req.body.events} on 24 Dec! Your tickets are attached to this email.`)
+      .moveDown()
+      .text('You can download the tickets from the link attached with this.')
+      .moveDown()
+      .text('Event Details:', { align: 'left' })
+      .moveDown()
+      .text(`• Event Name: ${req.body.events}`)
+      .text(`• Venue: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
+      .moveDown()
+      
+      .text('You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.')
+      .moveDown()
+      .text('We can’t wait to welcome you to the event!', { align: 'left' })
+      .moveDown()
+      .text('Best regards,', { align: 'left' })
+      .moveDown()
+      .text(req.body.fullName)  // assuming 'organizerName' is part of the request body  
+      .text("Cyberia Team") // assuming 'organizerOrganization' is part of the request body
+      .text("9408802605") // assuming 'contactInfo' is part of the request body
+      .moveDown();
+    
+    // Add the QR code to the PDF
+    
+    
+    doc.end();// End the PDF generation
 
 
   } catch (error) {
@@ -266,11 +274,19 @@ const registerSoloUser = async (req, res) => {
     });
 
     // Generate the PDF content
-    doc.fontSize(20).text("Your Event Ticket", { align: "center" });   
-    doc.image(qrCodeData, {
-      fit: [150, 150],
-      align: 'center',
+    doc.fontSize(23).text("Your Event Ticket", { align: "center" });   
+   
+    const pageWidth = doc.page.width;  // Get the page width
+    const qrCodeSize = 150;            // Define the size of the QR code (150x150)
+    const qrCodeX = (pageWidth - qrCodeSize) / 2; // Calculate the x position to center the image
+    
+    // Add the QR code using absolute positioning
+    doc.image(qrCodeData, qrCodeX, doc.y, {
+      fit: [qrCodeSize, qrCodeSize],   // Fit the image within 150x150
     });
+
+    doc.moveDown(7);
+
     doc.fontSize(16)
       .text(`Dear ${req.body.fullName},`, { align: 'left' })
       .moveDown()
@@ -296,7 +312,7 @@ const registerSoloUser = async (req, res) => {
       .moveDown();
     
     // Add the QR code to the PDF
-   
+    
     
     doc.end(); // End the PDF generation
 
