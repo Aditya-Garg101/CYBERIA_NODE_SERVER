@@ -12,7 +12,21 @@ const { exec } = require("child_process");
 dotenv.config();
 const mime = require('mime');
 const admin = require("firebase-admin")
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+const serviceAccount = {
+  "type": "service_account",
+  "project_id": "e-commerce-backend-bfa60",
+  "private_key_id": "a52ae616746a02916069c6c36ffbd35dc938eaca",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCsv57TFhmBV6aj\nCBBayJdUcn27F9zaLF5xFigCjPkKig+z4cDXy5swixxB2y7GsfbUayXvPGQdypTe\nUX1Tx87YLGjWwL+Q2+U5bP8+9LFVvgXcil5B9a5lKWHPAOtFBcmc0zBPVubhESvn\ngknubufC3h4zPGt0CAanX3Bh50Hcfe4fEel0pVAMLyvgIZfVEDYCN8HUnY019Nop\ntA0HuyT2EYu1wx20NnG/HvjRMOyLuM9D+87CJbiLmq6ccLxCRAqfoah8n4Um/BJX\nF+yeaCbFHe/F9uHvb5FoghdP41T9uFc2qTaRmIhdkoG4EHC00aRFKmbzwQjvp2so\nsvMOOc7BAgMBAAECggEAD+5A65b9ZaXrZlwDRBf9CqrfSO5vrcgLMpMYP/n3qn7m\naVCPm+b5Kg4eHj2kD+tQB7FU533SfsPUnDb4H46M1vcreOiAEhARUM0qMchXhUB3\nomm5PQx213nsPO6JA82/lMCOEzcApi9S9O/ZOQ2NvnUE5HU1NJdb47oDr2en9XkZ\nvrENjDH8Up8+ty5YkIn+axVYXfDsiBZcxshtZqPC+24A74DS+LcL5tYTwzTSKvjv\ntN3sjA5U3iPRffWFF3amTFtJb8ry3axITU2K/iZUdeidTkV3aRoDtrjwNXKHkn6y\nuWvspzALFT9fEYw2hfAfAyDMLqFTxBvPgmnYsAr11QKBgQDPCnpP8Ner607cRkyr\nR4ew33FuFVUslw7DuN2Cne7ke9TFHHjOtNESTK3Ke4+DDMR1hJn6X68n6uudYHdM\nRJhx+2Pk8dQjkPTOt9mxythE+h9EvyY/dpdKUbwKLpNhRvR8rT/dRTwwDpbrQhKA\nCFj6cORRAcREGUkhCtFXVf/nvQKBgQDVmTOtlPpcEAk+/Tt48+NxYhwScMVS0nlR\njjcTsSyp5eE5nwIW73f78WOs3c6tPtIDEhdAc2lSHo2DrF7MLDuEWhce//i6phYX\nJz//DSetWAhTwNFY1zig2zZNabZ/2ovDPCJNEA5aTuZlO+WaQeSakeAYnerVstD3\n4VDTM9ShVQKBgQDOycdKauHue1LDnY9cD1COr03KxpHQvHtprw3HNNjy6l+kFADx\nbBXZsi5uq6S2Hp1mRu/H66O1OeTkxgHBck3UomKuu37HmzN3+Jb9Bf2mPy/V6RlZ\nj6gh+arXfJeFNGpi0GOWLF2mHhxMkyyJJk1ArlrMMfiGj77DuttF4MZ8/QKBgGEI\nc92LLCDeeBTRXU8ZHF3JwA7wg/OYAdz2yjZ76lpUP/i5L23T46Hkiu9g5B73xtf2\nQ/HXfCT+FDOY/oeqIG+DrbU7e3bvNGHYRs5K35dzwnSpx3CgdO0+KHEKcQmr8ooC\nq2JuxNZpuWiLyUZGYN+HHVKRirkBvsSc6ubHSPTxAoGBAMkj2qaVlDsA8mfpks7j\nQVU1GqTga+vxm3sFwrOM+Js0mUJId5G5XDFQ5ue99Y9M01bRMQwKUavkaODXmrTj\nI8Mt5Jx2EeRk8FNfczHgHFU9CKfbektfacZKyEzIjcOO2PPGIEko6S05CW/K7LTP\nUCj2cTxYQnyPgcFcjtm27MwD\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-j4zn4@e-commerce-backend-bfa60.iam.gserviceaccount.com",
+  "client_id": "112347859658337575349",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-j4zn4%40e-commerce-backend-bfa60.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
+
+
 
 
 
@@ -173,11 +187,11 @@ const registerSoloUser = async (req, res) => {
     const qrCodeData = await QRcode.toDataURL(uniqueID);        
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      service: "Gmail",
       auth: {
         user: process.env.email,
         pass: process.env.password,
-      },
+      },      
     });
 
     // Step 3: Validate email input
@@ -230,8 +244,18 @@ const registerSoloUser = async (req, res) => {
         };
 
         // Step 7: Send the email
-        await transporter.sendMail(mailOptions);
-
+        // const rep = await transporter.sendMail(mailOptions);
+        // console.log(rep)
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+              // return res.status(500).json({ error: 'Failed to send email' });
+              console.log(error)
+          }
+          else{
+            console.log(info.response)
+            res.status(200).json({ success: 'Email sent successfully' });
+          }
+      });
         // Step 8: Save user details in the database with the Firebase link
         const SoloData = await SoloUser.create({
           ...req.body,
