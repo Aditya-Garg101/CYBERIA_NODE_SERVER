@@ -11,17 +11,20 @@ const PDFDocument = require("pdfkit");
 const { exec } = require("child_process");
 dotenv.config();
 const mime = require('mime');
-const admin = require("firebase-admin")
+const admin = require("firebase-admin");
+const Event = require("../models/Events");
+const axios = require("axios");
+const { v4: uuidv4 } = require("uuid");
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
 
 
 
-if(!admin.apps.length){
+if (!admin.apps.length) {
   admin.initializeApp({
     credential:
-    admin.credential.cert(serviceAccount)
+      admin.credential.cert(serviceAccount)
     ,
-    storageBucket : 'gs://e-commerce-backend-bfa60.appspot.com',
+    storageBucket: 'gs://e-commerce-backend-bfa60.appspot.com',
   })
 }
 
@@ -37,7 +40,7 @@ const bucket = admin.storage().bucket()
 //       },
 //     });    
 //     return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(uploadResponse[0].name)}?alt=media`;
-        
+
 //   };
 const registerTeamUser = async (req, res) => {
   try {
@@ -62,7 +65,7 @@ const registerTeamUser = async (req, res) => {
 
     // Step 4: Create PDF in-memory (no need to save to the filesystem)
     const doc = new PDFDocument();
-    
+
     // Prepare an in-memory buffer to write the PDF to
     const pdfBuffer = [];
     doc.on('data', chunk => pdfBuffer.push(chunk));
@@ -127,12 +130,12 @@ const registerTeamUser = async (req, res) => {
     });
 
     // Generate the PDF content
-    doc.fontSize(23).text("Your Event Ticket", { align: "center" });   
-   
+    doc.fontSize(23).text("Your Event Ticket", { align: "center" });
+
     const pageWidth = doc.page.width;  // Get the page width
     const qrCodeSize = 150;            // Define the size of the QR code (150x150)
     const qrCodeX = (pageWidth - qrCodeSize) / 2; // Calculate the x position to center the image
-    
+
     // Add the QR code using absolute positioning
     doc.image(qrCodeData, qrCodeX, doc.y, {
       fit: [qrCodeSize, qrCodeSize],   // Fit the image within 150x150
@@ -152,7 +155,7 @@ const registerTeamUser = async (req, res) => {
       .text(`• Event Name: ${req.body.events}`)
       .text(`• Venue: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
       .moveDown()
-      
+
       .text('You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.')
       .moveDown()
       .text('We can’t wait to welcome you to the event!', { align: 'left' })
@@ -163,10 +166,10 @@ const registerTeamUser = async (req, res) => {
       .text("Cyberia Team") // assuming 'organizerOrganization' is part of the request body
       .text("9408802605") // assuming 'contactInfo' is part of the request body
       .moveDown();
-    
+
     // Add the QR code to the PDF
-    
-    
+
+
     doc.end();// End the PDF generation
 
 
@@ -183,14 +186,14 @@ const registerSoloUser = async (req, res) => {
     const uniqueID = new mongoose.Types.ObjectId().toString();
 
     // Step 2: Generate the QR code as a PNG data URL
-    const qrCodeData = await QRcode.toDataURL(uniqueID);        
+    const qrCodeData = await QRcode.toDataURL(uniqueID);
 
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
         user: process.env.email,
         pass: process.env.password,
-      },      
+      },
     });
 
     // Step 3: Validate email input
@@ -200,7 +203,7 @@ const registerSoloUser = async (req, res) => {
 
     // Step 4: Create PDF in-memory (no need to save to the filesystem)
     const doc = new PDFDocument();
-    
+
     // Prepare an in-memory buffer to write the PDF to
     const pdfBuffer = [];
     doc.on('data', chunk => pdfBuffer.push(chunk));
@@ -214,7 +217,7 @@ const registerSoloUser = async (req, res) => {
 
         // Upload the PDF file to Firebase Storage
         const firebaseStorageRef = bucket.file(pdfUploadPath);
-       await firebaseStorageRef.save(pdfData, {
+        await firebaseStorageRef.save(pdfData, {
           contentType: 'application/pdf',
           public: true, // Make the file publicly accessible
         });
@@ -247,14 +250,14 @@ const registerSoloUser = async (req, res) => {
         // console.log(rep)
         transporter.sendMail(mailOptions, (error, info) => {
           if (error) {
-              // return res.status(500).json({ error: 'Failed to send email' });
-              console.log(error)
+            // return res.status(500).json({ error: 'Failed to send email' });
+            console.log(error)
           }
-          else{
+          else {
             console.log(info.response)
             res.status(200).json({ success: 'Email sent successfully' });
           }
-      });
+        });
         // Step 8: Save user details in the database with the Firebase link
         const SoloData = await SoloUser.create({
           ...req.body,
@@ -274,12 +277,12 @@ const registerSoloUser = async (req, res) => {
     });
 
     // Generate the PDF content
-    doc.fontSize(23).text("Your Event Ticket", { align: "center" });   
-   
+    doc.fontSize(23).text("Your Event Ticket", { align: "center" });
+
     const pageWidth = doc.page.width;  // Get the page width
     const qrCodeSize = 150;            // Define the size of the QR code (150x150)
     const qrCodeX = (pageWidth - qrCodeSize) / 2; // Calculate the x position to center the image
-    
+
     // Add the QR code using absolute positioning
     doc.image(qrCodeData, qrCodeX, doc.y, {
       fit: [qrCodeSize, qrCodeSize],   // Fit the image within 150x150
@@ -299,7 +302,7 @@ const registerSoloUser = async (req, res) => {
       .text(`• Event Name: ${req.body.events}`)
       .text(`• Venue: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
       .moveDown()
-      
+
       .text('You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.')
       .moveDown()
       .text('We can’t wait to welcome you to the event!', { align: 'left' })
@@ -310,10 +313,10 @@ const registerSoloUser = async (req, res) => {
       .text("Cyberia Team") // assuming 'organizerOrganization' is part of the request body
       .text("9408802605") // assuming 'contactInfo' is part of the request body
       .moveDown();
-    
+
     // Add the QR code to the PDF
-    
-    
+
+
     doc.end(); // End the PDF generation
 
   } catch (error) {
@@ -322,7 +325,66 @@ const registerSoloUser = async (req, res) => {
   }
 };
 
-module.exports = { registerTeamUser , registerSoloUser };
+
+const chatBotPayment = async (req, res) => {
+  try {
+    const userData = req.body;
+
+    arr = ["CS2", "Live Sketching"]
+    const events = Array.isArray(userData.events) ? userData.events : [];
+    
+    const eventsData = await Event.find({ title: events  });    
+  
+    const uuid = uuidv4();    
+    let totalPrice = 0;
+    eventsData.map((e) => {      
+      totalPrice += e.price;
+    })
+    // res.send({eventsData});
+    console.log(totalPrice) 
+    
+    // const link_id =   
+    
+    // console.log(userData);
+      const response = await axios.post(
+        'https://sandbox.cashfree.com/pg/links',
+        {
+          customer_details: {
+            customer_phone: userData.customer_phone,
+            customer_name: userData.customer_name,
+            customer_email: userData.customer_email
+          },
+          link_notify: {
+            send_email: true,
+            send_sms: true,
+          },
+          enable_invoice: true,
+          link_id: uuid,
+          link_amount: totalPrice,
+          link_currency: 'INR',
+          link_purpose: 'Payment',
+          link_partial_payments: false,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-version': '2023-08-01', // Replace with the correct version if needed
+            'x-client-id': 'TEST1034921662b6cfc52c511b087d6f61294301', // Replace with your actual client ID
+            'x-client-secret': 'cfsk_ma_test_565e8000bb3de8b2e1efcf0616ee3256_627c314c', // Replace with your actual client secret
+          },
+        }
+      );
+      
+        
+      res.status(201).send(response.data);
+} catch (error) {
+  console.log(error.message)
+  res.status(500).json({ message: error.message });
+
+}
+}
+
+module.exports = { registerTeamUser, chatBotPayment, registerSoloUser };
 
 
 // const encryptPDF = (filePath, password) => {

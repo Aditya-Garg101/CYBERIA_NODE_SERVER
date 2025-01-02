@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     description : {
         type: String,        
     },
-    RuleBook : {
+    ruleBook : {
         type: String,        
     },
     tag : {
