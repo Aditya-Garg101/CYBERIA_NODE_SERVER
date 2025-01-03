@@ -178,8 +178,6 @@ const registerTeamUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
 const registerSoloUser = async (req, res) => {
   try {
     // Step 1: Generate a unique identifier
@@ -198,16 +196,20 @@ const registerSoloUser = async (req, res) => {
 
     // Step 3: Validate email input
     if (!req.body.email) {
-      return res.status(304).send("Recipient's email is required");
+      return res.status(400).send("Recipient's email is required");
     }
+
+    // Convert events array to a string
+    const events = req.body.events;
+    const eventsString = Array.isArray(events) ? events.join(", ") : events; // Ensure it's a string
 
     // Step 4: Create PDF in-memory (no need to save to the filesystem)
     const doc = new PDFDocument();
 
     // Prepare an in-memory buffer to write the PDF to
     const pdfBuffer = [];
-    doc.on('data', chunk => pdfBuffer.push(chunk));
-    doc.on('end', async () => {
+    doc.on("data", (chunk) => pdfBuffer.push(chunk));
+    doc.on("end", async () => {
       const pdfData = Buffer.concat(pdfBuffer);
 
       try {
@@ -218,58 +220,57 @@ const registerSoloUser = async (req, res) => {
         // Upload the PDF file to Firebase Storage
         const firebaseStorageRef = bucket.file(pdfUploadPath);
         await firebaseStorageRef.save(pdfData, {
-          contentType: 'application/pdf',
+          contentType: "application/pdf",
           public: true, // Make the file publicly accessible
         });
+
         // Get the public URL of the uploaded file
         const fileLink = `https://storage.googleapis.com/${firebaseStorageRef.bucket.name}/${firebaseStorageRef.name}`;
-        console.log(fileLink)
+        console.log(fileLink);
+
         // Step 6: Send the email with the Firebase URL as an attachment link
         const mailOptions = {
           from: process.env.email,
           to: req.body.email,
-          subject: `Your Ticket for ${req.body.events}`,
+          subject: `Your Ticket for ${eventsString}`,
           html: `
             <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; max-width: 600px; margin: auto;">
               <h2 style="text-align: center; color: #0073e6;">Your Event Ticket</h2>
               <p>Dear ${req.body.fullName},</p>
-              <p>Thank you for registering for <strong>${req.body.events}</strong>!</p>
+              <p>Thank you for registering for <strong>${eventsString}</strong>!</p>
               <p>Please find your ticket attached. </p>
               <div style="background-color: #f2f2f2; padding: 10px; border-radius: 5px; text-align: center; font-size: 18px;">
                 <a href="${fileLink}" target="_blank">Download Your Ticket</a>
               </div>          
               <p>We look forward to seeing you at the event!</p>
               <p>Note: QR code will be disabled once scanned, so keep it secure!</p>
-              <p>Best Regards,<br>The ${req.body.events} Team</p>
+              <p>Best Regards,<br>The ${eventsString} Team</p>
             </div>
           `,
         };
 
-        // Step 7: Send the email
-        // const rep = await transporter.sendMail(mailOptions);
-        // console.log(rep)
-        transporter.sendMail(mailOptions, (error, info) => {
+        // Send the email
+        transporter.sendMail(mailOptions, async (error, info) => {
           if (error) {
-            // return res.status(500).json({ error: 'Failed to send email' });
-            console.log(error)
-          }
-          else {
-            console.log(info.response)
-            res.status(200).json({ success: 'Email sent successfully' });
-          }
-        });
-        // Step 8: Save user details in the database with the Firebase link
-        const SoloData = await SoloUser.create({
-          ...req.body,
-          qrString: uniqueID,
-          ticket: fileLink, // Firebase link to the PDF
-        });
+            console.log(error);
+            return res.status(500).json({ error: "Failed to send email" });
+          } else {
+            console.log(info.response);
 
-        res.status(201).json({
-          message: "QR Code generated and sent successfully!",
-          SoloData,
-        });
+            // Step 7: Save user details in the database with the Firebase link
+            const SoloData = await SoloUser.create({
+              ...req.body,
+              qrString: uniqueID,
+              ticket: fileLink, // Firebase link to the PDF
+              events: eventsString, // Ensure events are stored as a string
+            });
 
+            res.status(201).json({
+              message: "QR Code generated and sent successfully!",
+              SoloData,
+            });
+          }
+        });
       } catch (error) {
         console.error("Error uploading to Firebase:", error);
         res.status(500).json({ message: "Error uploading the ticket to Firebase" });
@@ -279,51 +280,47 @@ const registerSoloUser = async (req, res) => {
     // Generate the PDF content
     doc.fontSize(23).text("Your Event Ticket", { align: "center" });
 
-    const pageWidth = doc.page.width;  // Get the page width
-    const qrCodeSize = 150;            // Define the size of the QR code (150x150)
+    const pageWidth = doc.page.width; // Get the page width
+    const qrCodeSize = 150; // Define the size of the QR code (150x150)
     const qrCodeX = (pageWidth - qrCodeSize) / 2; // Calculate the x position to center the image
 
     // Add the QR code using absolute positioning
     doc.image(qrCodeData, qrCodeX, doc.y, {
-      fit: [qrCodeSize, qrCodeSize],   // Fit the image within 150x150
+      fit: [qrCodeSize, qrCodeSize], // Fit the image within 150x150
     });
 
     doc.moveDown(7);
 
     doc.fontSize(16)
-      .text(`Dear ${req.body.fullName},`, { align: 'left' })
+      .text(`Dear ${req.body.fullName},`, { align: "left" })
       .moveDown()
-      .text(`We're thrilled that you'll be joining us for ${req.body.events} on 24 Dec! Your tickets are attached to this email.`)
+      .text(`We're thrilled that you'll be joining us for ${eventsString} on 24 Dec! Your tickets are attached to this email.`)
       .moveDown()
-      .text('You can download the tickets from the link attached with this.')
+      .text("You can download the tickets from the link attached with this.")
       .moveDown()
-      .text('Event Details:', { align: 'left' })
+      .text("Event Details:", { align: "left" })
       .moveDown()
-      .text(`• Event Name: ${req.body.events}`)
+      .text(`• Event Name: ${eventsString}`)
       .text(`• Venue: The Maharaja Sayajirao University of Baroda | Faculty of Science | Department of Computer Application`)
       .moveDown()
-
-      .text('You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.')
+      .text("You do not need to print your ticket. A digital version will be sufficient for entry. Simply present the ticket on your phone or device when you arrive.")
       .moveDown()
-      .text('We can’t wait to welcome you to the event!', { align: 'left' })
+      .text("We can’t wait to welcome you to the event!", { align: "left" })
       .moveDown()
-      .text('Best regards,', { align: 'left' })
+      .text("Best regards,", { align: "left" })
       .moveDown()
-      .text(req.body.fullName)  // assuming 'organizerName' is part of the request body  
-      .text("Cyberia Team") // assuming 'organizerOrganization' is part of the request body
-      .text("9408802605") // assuming 'contactInfo' is part of the request body
+      .text("Cyberia Team")
+      .text("9408802605")
       .moveDown();
 
-    // Add the QR code to the PDF
-
-
-    doc.end(); // End the PDF generation
-
+    // End the PDF generation
+    doc.end();
   } catch (error) {
     console.error("Error generating QR code or email:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 const chatBotPayment = async (req, res) => {
@@ -373,8 +370,7 @@ const chatBotPayment = async (req, res) => {
           },
         }
       );
-      
-        
+              
       res.status(201).send(response.data);
 } catch (error) {
   console.log(error.message)
