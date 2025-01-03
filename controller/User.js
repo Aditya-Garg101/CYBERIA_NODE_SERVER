@@ -369,8 +369,7 @@ const chatBotPayment = async (req, res) => {
           headers: {
             'Content-Type': 'application/json',
             'x-api-version': '2023-08-01', // Replace with the correct version if needed
-            'x-client-id': 'TEST1034921662b6cfc52c511b087d6f61294301', // Replace with your actual client ID
-            'x-client-secret': 'cfsk_ma_test_565e8000bb3de8b2e1efcf0616ee3256_627c314c', // Replace with your actual client secret
+            // Replace with your actual client secret
           },
         }
       );
