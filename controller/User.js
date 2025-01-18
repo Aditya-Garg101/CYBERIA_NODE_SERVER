@@ -336,54 +336,54 @@ const chatBotPayment = async (req, res) => {
 
     arr = ["CS2", "Live Sketching"]
     const events = Array.isArray(userData.events) ? userData.events : [];
-    
-    const eventsData = await Event.find({ title: events  });    
-  
-    const uuid = uuidv4();    
+
+    const eventsData = await Event.find({ title: events });
+
+    const uuid = uuidv4();
     let totalPrice = 0;
-    eventsData.map((e) => {      
+    eventsData.map((e) => {
       totalPrice += e.price;
     })
     // res.send({eventsData});
-    console.log(totalPrice) 
-    
-    // const link_id =   
-    
-    // console.log(userData);
-      const response = await axios.post(
-        'https://sandbox.cashfree.com/pg/links',
-        {
-          customer_details: {
-            customer_phone: userData.customer_phone,
-            customer_name: userData.customer_name,
-            customer_email: userData.customer_email
-          },
-          link_notify: {
-            send_email: true,
-            send_sms: true,
-          },
-          enable_invoice: true,
-          link_id: uuid,
-          link_amount: totalPrice,
-          link_currency: 'INR',
-          link_purpose: 'Payment',
-          link_partial_payments: false,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-version': '2023-08-01', // Replace with the correct version if needed
-            // Replace with your actual client secret
-          },
-        }
-      );
-              
-      res.status(201).send(response.data);
-} catch (error) {
-  console.log(error.message)
-  res.status(500).json({ message: error.message });
+    console.log(totalPrice)
 
-}
+    // const link_id =   
+
+    // console.log(userData);
+    const response = await axios.post(
+      'https://sandbox.cashfree.com/pg/links',
+      {
+        customer_details: {
+          customer_phone: userData.customer_phone,
+          customer_name: userData.customer_name,
+          customer_email: userData.customer_email
+        },
+        link_notify: {
+          send_email: true,
+          send_sms: true,
+        },
+        enable_invoice: true,
+        link_id: uuid,
+        link_amount: totalPrice,
+        link_currency: 'INR',
+        link_purpose: 'Payment',
+        link_partial_payments: false,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-version': '2023-08-01', // Replace with the correct version if needed
+          // Replace with your actual client secret
+        },
+      }
+    );
+
+    res.status(201).send(response.data);
+  } catch (error) {
+    console.log(error.message)
+    res.status(500).json({ message: error.message });
+
+  }
 }
 
 module.exports = { registerTeamUser, chatBotPayment, registerSoloUser };
