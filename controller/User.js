@@ -8,16 +8,54 @@ const dotenv = require("dotenv");
 const path = require("path");
 const fs = require("fs");
 const PDFDocument = require("pdfkit");
-const { exec } = require("child_process");
 dotenv.config();
 const mime = require('mime');
 const admin = require("firebase-admin");
 const Event = require("../models/Events");
 const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
+const { WebSocketServer } = require('ws');
+const app = require("..");
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
 
 
+// WebSocket Setup
+
+// Create a WebSocket server
+let wss;
+
+const initializeWebSocket = (server) => {
+  wss = new WebSocketServer({ noServer: true });
+
+  // Handle WebSocket connections
+  wss.on('connection', (ws) => {
+    console.log('WebSocket connection established.');
+
+    // Listen for incoming messages from the client
+    ws.on('message', (message) => {
+      console.log('Received message:', message);
+    });
+
+    // Send a welcome message to the client
+    ws.send('Welcome to the WebSocket server!');
+  });
+
+  // Handle WebSocket upgrade from HTTP server
+  server.on('upgrade', (request, socket, head) => {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  });
+};
+
+const sendMessageToClient = (message) => {
+  // Send a message to all connected WebSocket clients
+  wss.clients.forEach((client) => {
+    if (client.readyState === client.OPEN) {
+      client.send(message);
+    }
+  });
+};
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -329,34 +367,55 @@ const registerSoloUser = async (req, res) => {
 };
 
 
+const monitorPaymentStatus = async (linkId, interval = 5000) => {
+  let isCompleted = false;
 
-const chatBotPayment = async (req, res) => {
+  while (!isCompleted) {
+    try {
+      const statusData = await checkPaymentStatus(linkId);
+
+      console.log('Payment status:', statusData.status);
+
+      if (statusData.status === 'PAID') {
+        console.log('Payment completed successfully!');
+        isCompleted = true;
+        // Optionally, handle the success here
+      } else if (statusData.status === 'EXPIRED' || statusData.status === 'CANCELLED') {
+        console.log('Payment was not completed.');
+        isCompleted = true;
+        // Optionally, handle the failure here
+      } else {
+        console.log('Payment not yet completed. Retrying...');
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, interval)); // Wait for the interval
+    } catch (error) {
+      console.error('Error monitoring payment status:', error);
+      break;
+    }
+  }
+};
+const generatePaymentLink = async (req, res) => {
   try {
     const userData = req.body;
+    const events = Array.isArray(userData.customerDetails.events) ? userData.customerDetails.events : [];
+    const eventsData = await Event.find({ title: { $in: events } });
 
-    arr = ["CS2", "Live Sketching"]
-    const events = Array.isArray(userData.events) ? userData.events : [];
-
-    const eventsData = await Event.find({ title: events });
-
-    const uuid = uuidv4();
     let totalPrice = 0;
-    eventsData.map((e) => {
+    eventsData.forEach((e) => {
       totalPrice += e.price;
-    })
-    // res.send({eventsData});
-    console.log(totalPrice)
+    });
 
-    // const link_id =   
+    const uuid = uuidv4(); // Unique ID for the payment link
 
-    // console.log(userData);
+    // Step 1: Create payment link
     const response = await axios.post(
       'https://sandbox.cashfree.com/pg/links',
       {
         customer_details: {
-          customer_phone: userData.customer_phone,
-          customer_name: userData.customer_name,
-          customer_email: userData.customer_email
+          customer_phone: req.body.customerDetails.phone,
+          customer_name: req.body.customerDetails.name,
+          customer_email: req.body.customerDetails.email,
         },
         link_notify: {
           send_email: true,
@@ -372,21 +431,103 @@ const chatBotPayment = async (req, res) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-api-version': '2023-08-01', // Replace with the correct version if needed
-          // Replace with your actual client secret
+          'x-api-version': '2023-08-01',
+          'x-client-id': 'TEST1034921662b6cfc52c511b087d6f61294301',
+          'x-client-secret': 'cfsk_ma_test_565e8000bb3de8b2e1efcf0616ee3256_627c314c',
         },
       }
     );
 
-    res.status(201).send(response.data);
+    if (response.data.link_url) {
+      console.log(`Payment link created: ${response.data.link_url}`);
+
+      // Send the payment link to the client
+      res.status(200).json({
+        paymentLink: response.data.link_url,
+        linkId: response.data.link_id,
+      });
+
+      // Now start monitoring payment status
+      chatBotPayment(response.data.link_id);
+    }
   } catch (error) {
-    console.log(error.message)
-    res.status(500).json({ message: error.message });
-
+    console.log(error);
+    res.send(error);
   }
-}
+};
+const chatBotPayment = async (linkId) => {
+  try {
+    // Step 2: Monitor payment status
+    const monitorPaymentStatus = async (linkId, ws) => {
+      let isCompleted = false;
 
-module.exports = { registerTeamUser, chatBotPayment, registerSoloUser };
+      while (!isCompleted) {
+        try {
+          const statusResponse = await axios.get(
+            `https://sandbox.cashfree.com/pg/links/${linkId}`,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-version': '2023-08-01',
+                'x-client-id': 'TEST1034921662b6cfc52c511b087d6f61294301',
+                'x-client-secret': 'cfsk_ma_test_565e8000bb3de8b2e1efcf0616ee3256_627c314c',
+              },
+            }
+          );
+
+          const statusData = statusResponse.data;
+          console.log(`Payment link_status: ${statusData.link_status}`);
+
+          // Send status updates to the client via WebSocket
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ link_status: statusData.link_status }));
+          }
+
+          if (statusData.link_status === 'PAID') {
+            console.log('Payment completed successfully!');
+            isCompleted = true;
+            //generate ticket pdf and send url using websocket
+            //pdfUrl = generatepdf
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ status: 'success', message: 'Payment  completed!' }));
+            }
+          } else if (['EXPIRED', 'USER DROPPED', 'CANCELLED'].includes(statusData.link_status)) {
+            console.log('Payment failed or expired.');
+            isCompleted = true;
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ status: 'failure', message: 'Payment failed or expired.' }));
+            }
+          } else {
+            console.log('Payment not yet completed. Retrying...');
+          }
+
+          // Wait for the interval before retrying
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+        } catch (error) {
+          console.error('Error monitoring payment status:', error);
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ status: 'error', message: 'Error monitoring payment status.' }));
+          }
+          isCompleted = true;
+        }
+      }
+    };
+
+    // Step 3: WebSocket connection to send updates
+    wss.on('connection', (ws) => {
+      monitorPaymentStatus(linkId, ws);
+    });
+
+  } catch (error) {
+    console.error('Error in chatBotPayment:', error);
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+module.exports = {
+  registerTeamUser, generatePaymentLink, chatBotPayment, registerSoloUser, initializeWebSocket,
+  sendMessageToClient
+};
 
 
 // const encryptPDF = (filePath, password) => {
