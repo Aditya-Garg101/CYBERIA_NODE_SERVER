@@ -15,7 +15,7 @@ const admin = require("firebase-admin");
 const Event = require("../models/Events");
 const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 
 
 

@@ -8,7 +8,7 @@ const cors = require("cors");
 const { WebSocketServer } = require('ws');
 const { initializeWebSocket } = require('./controller/User');
 const bodyParser = require('body-parser');
-const twilio = require('twilio');
+
 
 dotenv.config(); // Load environment variables from .env
 
@@ -20,44 +20,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const client = twilio(accountSid, authToken);
-
-app.post('/send-message', async (req, res) => {
-  const { to } = req.body; // WhatsApp number in format 'whatsapp:+1234567890'
-
-  const messageBody = `
-🎉 Congratulations! Your registration for Cyberia Tech Fest 2025 is confirmed! 🎉
-
-📌 Here are your ticket details:
-Event: Cyberia Tech Fest 2025
-Dates: 27th, 28th February & 1st March
-Venue: Maharaja Sayajirao University of Baroda
-
-✅ Keep this ticket safe and present it at the event for entry.
-If you have any questions or need further assistance, feel free to message here.
-
-🚀 Get ready for an amazing tech experience—see you at Cyberia Tech Fest 2025! 🙌
-`;
-
-  try {
-    const message = await client.messages.create({
-      from: `whatsapp:${process.env.TWILIO_PHONE_NUMBER}`, // Ensure this has 'whatsapp:'
-      to: `whatsapp:${to}`, // Remove the space after 'whatsapp:'
-      body: messageBody,
-    });
-    res.status(200).send({ success: true, message });
-  } catch (error) {
-    console.error('Error sending message:', error);
-    res.status(500).send({ success: false, error });
-  }
-});
-
 
 app.server = app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
-  initializeWebSocket(app.server); // Pass the server instance to the WebSocket controller
+  // Pass the server instance to the WebSocket controller
 
 });
 
